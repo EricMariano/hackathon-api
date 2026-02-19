@@ -21,10 +21,14 @@ model Event {
   endDate DateTime
   location String
   categoryBadges String[]
+  eventLink String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  organizationId String?
+  organization   Organization? @relation("OrganizationEvents", fields: [organizationId], references: [id])
   superadminId String
   superadmin Superadmin @relation("SuperadminEvent", fields: [superadminId], references: [id])
+  squads Squad[] @relation("EventSquads")
 }
 
 model Superadmin {
@@ -52,6 +56,7 @@ model Organization {
   updatedAt DateTime @updatedAt
   superadminId String
   superadmin Superadmin @relation("SuperadminOrganization", fields: [superadminId], references: [id])
+  events Event[] @relation("OrganizationEvents")
 }
 
 model User {
@@ -71,6 +76,9 @@ model User {
 model Squad {
   id        String   @id @default(uuid())
   name      String
+  passkey   String?
+  eventId   String
+  event     Event    @relation("EventSquads", fields: [eventId], references: [id])
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
