@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/common/prisma/prisma.service";
 import { CreateSuperadminDto } from "./dto/create-superadmin.dto";
-import { UpdateSuperadminDto } from "./dto/update-superadmin.sto";
+import { UpdateSuperadminDto } from "./dto/update-superadmin.dto";
 import * as bcrypt from "bcrypt"
 
 @Injectable()
@@ -46,7 +46,7 @@ export class SuperadminService {
   }
 
   async findOneSuperadmin(id: string) {
-    const superadmin = this.prisma.superadmin.findUnique ({
+    const superadmin = await this.prisma.superadmin.findUnique ({
       where: {id},
       select: {
         id: true,
@@ -58,22 +58,23 @@ export class SuperadminService {
       }
     });
     if (!superadmin) {
-      throw new NotFoundException(`Cannot find superadmin id (${id})`)
+      throw new NotFoundException(`Cannot find superadmin id (${id})`);
     }
+    return superadmin;
   }
 
   async updateSuperadmin(id: string, updateSuperadminDto: UpdateSuperadminDto) {
-    await this.findOneSuperadmin
+    await this.findOneSuperadmin(id)
     return this.prisma.superadmin.update({
       where: {id},
       data: updateSuperadminDto,
     });
   }
 
-  async deleteSuperadmin(id: string) {
-    await this.findOneSuperadmin
+  async removeSuperadmin(id: string) {
+    await this.findOneSuperadmin(id)
     return this.prisma.superadmin.delete({
       where: {id}
-    })
+    });
   }
 }
