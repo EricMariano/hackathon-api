@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Event {
+  id String @id @default(uuid())
+  name String
+  description String
+  startDate DateTime
+  endDate DateTime
+  location String
+  categoryBadges String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  superadminId String
+  superadmin Superadmin @relation("SuperadminEvent", fields: [superadminId], references: [id])
+}
+
+model Superadmin {
+  id String @id @default(uuid())
+  firstName String
+  lastName String
+  phone String @unique
+  email String @unique
+  password String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  organizations Organization[] @relation("SuperadminOrganization")
+  events Event[] @relation("SuperadminEvent")
+}
+
+model Organization {
+  id String @id @default(uuid())
+  name String
+  description String
+  email String @unique
+  website String
+  logo String?
+  banner String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  superadminId String
+  superadmin Superadmin @relation("SuperadminOrganization", fields: [superadminId], references: [id])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  phone     String   @unique
+  email     String   @unique
+  password  String
+  squadId   String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  squad         Squad?   @relation("SquadMember", fields: [squadId], references: [id])
+  squadsCreated Squad[]  @relation("SquadCreator")
+}
+
+model Squad {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy User     @relation("SquadCreator", fields: [userId], references: [id])
+  members   User[]   @relation("SquadMember")
+}
