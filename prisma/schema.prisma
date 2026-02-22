@@ -49,7 +49,7 @@ model Organization {
   name String
   description String
   email String @unique
-  website String
+  website String?
   logo String?
   banner String?
   createdAt DateTime @default(now())
