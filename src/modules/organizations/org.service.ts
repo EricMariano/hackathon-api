@@ -7,23 +7,18 @@ export class OrganizationService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createOrg(createOrgDto: CreateOrgDto) {
-    const verifyEmail = await this.prisma.organization.findFirst({
-      where: {
-        OR: [{ email: createOrgDto.email }]
-      }
-    })
-    const verifyName = await this.prisma.organization.findFirst({
-      where: {
-        OR: [{ name: createOrgDto.name }]
-      }
-    })
-    const verifySuperaminId = await this.prisma.organization.findFirst({
-      where: {
-        OR: [{ superadminId: createOrgDto.superadminId }]
-      }
-    })
-    if (verifyEmail || !verifySuperaminId || verifyName) {
-      throw new ConflictException("")
+    const superadminExists = await this.prisma.superadmin.findUnique({
+      where: { id: createOrgDto.superadminId },
+    });
+    if (!superadminExists) {
+      throw new NotFoundException('Superadmin não encontrado');
+    }
+
+    const existingEmail = await this.prisma.organization.findFirst({
+      where: { email: createOrgDto.email },
+    });
+    if (existingEmail) {
+      throw new ConflictException('Email já utilizado por outra organização');
     }
     return this.prisma.organization.create({
       data: {
@@ -49,7 +44,7 @@ export class OrganizationService {
   }
 
   async findOneOrg(id: string) {
-    const organization = this.prisma.organization.findUnique ({
+    const organization = await this.prisma.organization.findUnique({
       where: {id},
         select: {
           id: true,

@@ -13,8 +13,8 @@ export class OrganizationController {
   }
 
   @Get()
-  findAllSuperadmins() {
-    return this.organizationServices.findAllOrgs()
+  findAllOrganizations() {
+    return this.organizationServices.findAllOrgs();
   }
 
   @Get(':id')

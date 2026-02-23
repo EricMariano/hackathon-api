@@ -7,6 +7,6 @@ import { PrismaModule } from "src/common/prisma/prisma.module";
   imports: [PrismaModule],
   controllers: [OrganizationController],
   providers: [OrganizationService],
-  exports: [OrganizationModule]
+  exports: [OrganizationService]
 })
 export class OrganizationModule {}
