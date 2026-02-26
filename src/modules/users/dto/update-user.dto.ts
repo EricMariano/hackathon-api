@@ -1,5 +1,4 @@
-import { IsString, IsEmail, IsOptional } from 'class-validator';
-import { isPhoneNumber } from 'src/common/decorators/phone-validation';
+import { IsString, IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
 
 export class UpdateUserDto {
   @IsString()
@@ -10,8 +9,7 @@ export class UpdateUserDto {
   @IsOptional()
   lastName: string;
 
-  @isPhoneNumber()
-  @IsString()
+  @IsPhoneNumber(undefined, { message: 'Phone must be a valid number (e.g. +5511999999999)' })
   @IsOptional()
   phone: string;
 

@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsDate, IsArray, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateEventDto {
   @ApiPropertyOptional({ example: 'Hackathon 2025 - Atualizado' })
@@ -13,11 +14,13 @@ export class UpdateEventDto {
   description?: string;
 
   @ApiPropertyOptional({ example: '2025-03-01T09:00:00.000Z' })
+  @Type(() => Date)
   @IsDate()
   @IsOptional()
   startDate?: Date;
 
   @ApiPropertyOptional({ example: '2025-03-02T18:00:00.000Z' })
+  @Type(() => Date)
   @IsDate()
   @IsOptional()
   endDate?: Date;

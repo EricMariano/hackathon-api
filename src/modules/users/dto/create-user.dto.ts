@@ -2,10 +2,10 @@ import {
   IsString,
   IsEmail,
   IsNotEmpty,
+  IsPhoneNumber,
   MinLength,
   MaxLength,
 } from 'class-validator';
-import { isPhoneNumber } from 'src/common/decorators/phone-validation';
 
 export class CreateUserDto {
   @IsString()
@@ -16,8 +16,7 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Last name is required' })
   lastName: string;
 
-  @isPhoneNumber()
-  @IsString()
+  @IsPhoneNumber(undefined, { message: 'Phone must be a valid number (e.g. +5579999999999)' })
   @IsNotEmpty({ message: 'Phone is required' })
   phone: string;
 
