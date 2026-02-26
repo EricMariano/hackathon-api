@@ -1,14 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // remove do body property que nao exista no DTO
-    forbidNonWhitelisted: true, // retorna 400 se mandar campo extra
-    transform: true, // converte query/param para o tipo esperado (ex: string → number)
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  const config = new DocumentBuilder()
+    .setTitle('Hackathon API')
+    .setDescription('API do Hackathon')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
