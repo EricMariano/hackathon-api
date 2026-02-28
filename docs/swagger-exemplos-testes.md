@@ -16,10 +16,12 @@ Use os JSON abaixo no Swagger UI (`/api`) para testar todos os endpoints da API.
 | Módulo        | Endpoints |
 |---------------|-----------|
 | [App (root)](#app-root) | GET / |
+| [Auth](#auth) | POST user/login, POST superadmin/login |
 | [Events](#events) | POST, GET, GET shareable-link/:id, GET :id, PUT :id, DELETE :id |
 | [Superadmin](#superadmin) | POST, GET, GET :id, PATCH :id, DELETE :id |
 | [Organization](#organization) | POST, GET, GET :id, PATCH :id, DELETE :id |
 | [Users](#users) | POST, GET, GET :id, PATCH :id, DELETE :id |
+| [Squads](#squads) | POST, POST leave, GET, GET :id, POST :id/join, PUT :id, DELETE :id |
 
 ---
 
@@ -30,6 +32,38 @@ Use os JSON abaixo no Swagger UI (`/api`) para testar todos os endpoints da API.
 Sem body. Método **GET**.
 
 **Resposta esperada (200):** string (ex.: `"Hello World!"`).
+
+---
+
+## Auth
+
+### 1. POST /auth/user/login — Login de usuário
+
+**Body (application/json):**
+
+```json
+{
+  "email": "usuario@email.com",
+  "password": "senhaDoUsuario"
+}
+```
+
+**Resposta esperada (200):** `{ "access_token": "eyJhbGciOiJIUzI1NiIs..." }`. Use o `access_token` no header `Authorization: Bearer <token>` para acessar rotas protegidas. 401 se credenciais inválidas.
+
+---
+
+### 2. POST /auth/superadmin/login — Login de superadmin
+
+**Body (application/json):**
+
+```json
+{
+  "email": "superadmin@email.com",
+  "password": "senhaDoSuperadmin"
+}
+```
+
+**Resposta esperada (200):** `{ "access_token": "eyJhbGciOiJIUzI1NiIs..." }`. Use o `access_token` no header `Authorization: Bearer <token>` para rotas que exigem superadmin. 401 se credenciais inválidas.
 
 ---
 
@@ -330,18 +364,131 @@ Sem body. **Resposta (200):** array de usuários.
 
 ---
 
+## Squads
+
+### 1. POST /squads — Criar squad
+
+**Body (application/json):**
+
+```json
+{
+  "name": "Squad Alpha",
+  "description": "Equipe focada em backend e APIs",
+  "passkey": "squad-alpha-2025",
+  "membersQuantity": 5,
+  "eventId": "uuid-do-evento",
+  "createdBy": "uuid-do-usuario-criador",
+  "members": ["uuid-user-1", "uuid-user-2"]
+}
+```
+
+**Campos obrigatórios:** `name`, `membersQuantity` (mínimo 1), `eventId`, `createdBy`.  
+**Opcionais:** `description`, `passkey`, `members` (array de UUIDs de usuários a vincular). O criador é incluído automaticamente como membro.
+
+**Resposta esperada (201):** squad criado com `event`, `createdBy` e `members` populados.
+
+---
+
+### 2. GET /squads — Listar todos os squads
+
+Sem body. **Resposta (200):** array de squads com `event` e `createdBy`.
+
+---
+
+### 3. GET /squads/:id — Buscar squad por ID
+
+**Path:** `id` = UUID do squad. **Resposta (200):** squad com `event`, `createdBy` e `members`.
+
+---
+
+### 4. POST /squads/:id/join — Entrar no squad
+
+**Path:** `id` = UUID do squad.
+
+**Body (application/json):**
+
+```json
+{
+  "userId": "uuid-do-usuario",
+  "passkey": "squad-alpha-2025"
+}
+```
+
+**Campos:** `userId` obrigatório; `passkey` obrigatório apenas se o squad tiver passkey configurado.
+
+**Validações:** usuário não pode já estar em outro squad; squad não pode estar cheio (`members.length < membersQuantity`); se o squad tiver `passkey`, o valor enviado deve ser igual.
+
+**Resposta (200):** squad atualizado (com o usuário em `members`). Erros comuns: 400 (já em outro squad, squad cheio, passkey inválida), 404 (squad ou usuário não encontrado).
+
+---
+
+### 5. POST /squads/leave — Sair do squad
+
+**Body (application/json):**
+
+```json
+{
+  "userId": "uuid-do-usuario"
+}
+```
+
+**Resposta (200):** squad do qual o usuário saiu (antes de desvincular). 400 se o usuário não estiver em nenhum squad; 404 se o usuário não existir.
+
+---
+
+### 6. PUT /squads/:id — Atualizar squad
+
+**Path:** `id` = UUID do squad.
+
+**Body (todos opcionais):**
+
+```json
+{
+  "name": "Squad Alpha - Atualizado",
+  "description": "Equipe full-stack",
+  "passkey": "nova-passkey",
+  "membersQuantity": 6
+}
+```
+
+**Atualização parcial:**
+
+```json
+{
+  "name": "Squad Alpha Plus",
+  "membersQuantity": 8
+}
+```
+
+**Resposta (200):** squad atualizado.
+
+---
+
+### 7. DELETE /squads/:id — Remover squad
+
+**Path:** `id` = UUID do squad. Sem body. **Resposta (200):** objeto do squad removido. Os membros vinculados têm `squadId` definido como `null`.
+
+---
+
 ## Ordem sugerida para testar (fluxo completo)
 
 1. **GET /** — Verificar se a API está no ar.
 2. **POST /superadmin** — Criar um superadmin; guardar o `id`.
+2.1. **POST /auth/superadmin/login** — (Opcional) Login com email e senha do superadmin; guardar o `access_token` para rotas protegidas.
 3. **POST /organization** — Criar uma organização com o `superadminId` do passo 2; guardar o `id` da organização.
 4. **POST /events** — Criar um evento com o `superadminId` e o `organizationId` (ou só `superadminId`); guardar o `id` do evento.
 5. **GET /events**, **GET /events/:id**, **GET /events/shareable-link/:id** — Listar, buscar e obter link.
 6. **PUT /events/:id** — Atualizar o evento.
-7. **POST /users** — Criar um usuário; guardar o `id`.
+7. **POST /users** — Criar um usuário (e mais um ou dois se quiser testar membros); guardar os `id`.
+7.1. **POST /auth/user/login** — (Opcional) Login com email e senha do usuário; guardar o `access_token` para rotas protegidas.
 8. **GET /users**, **GET /users/:id** — Listar e buscar usuário.
-9. **PATCH /superadmin/:id**, **PATCH /organization/:id**, **PATCH /users/:id** — Testar atualizações parciais.
-10. **DELETE** — Remover em ordem que respeite FKs (ex.: evento → organização → superadmin; usuário quando aplicável).
+9. **POST /squads** — Criar um squad com `eventId` e `createdBy` (use os IDs do evento e do usuário); opcionalmente inclua `members` (array de UUIDs de usuários).
+10. **GET /squads**, **GET /squads/:id** — Listar e buscar squad (verificar `event`, `createdBy`, `members`).
+11. **POST /squads/:id/join** — Entrar no squad (body: `userId`, `passkey` se o squad tiver).
+12. **POST /squads/leave** — Sair do squad (body: `userId`).
+13. **PUT /squads/:id** — Atualizar squad.
+14. **PATCH /superadmin/:id**, **PATCH /organization/:id**, **PATCH /users/:id** — Testar atualizações parciais.
+15. **DELETE** — Remover em ordem que respeite FKs: squad → evento → organização → superadmin; usuário quando aplicável.
 
 ---
 
@@ -352,6 +499,9 @@ Sem body. **Resposta (200):** array de usuários.
 | Evento      | `superadminId`    | UUID de um Superadmin existente. |
 | Evento      | `organizationId`  | UUID de Organization ou valor aceito pelo backend (pode ser opcional). |
 | Organização | `superadminId`    | UUID de um Superadmin existente. |
+| Squad       | `eventId`         | UUID de um Event existente. |
+| Squad       | `createdBy`       | UUID de um User existente (criador do squad). |
+| Squad       | `members`         | Array de UUIDs de Users; `membersQuantity` deve ser ≥ 1. |
 | Telefone    | `phone`           | Formato E.164 (ex.: +5511999999999). |
 | Senha       | `password`        | 8 a 32 caracteres (create). |
 

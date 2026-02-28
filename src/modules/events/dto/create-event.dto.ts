@@ -54,4 +54,8 @@ export class CreateEventDto {
   @IsArray()
   @IsNotEmpty()
   squads: string[];
+
+  squadMaxMembersQuantity: number;
+  
+  squadsMinMembersQuantity: number;
 }
