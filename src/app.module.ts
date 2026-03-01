@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
-// import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module'; 
-// import { SquadModule } from './squad/squad.module';
 import { EventModule } from './modules/events/event.module';
+import { SquadsModule } from './modules/squads/squads.module';
 import { SuperadminModule } from './modules/superadmin/superadmin.module'; 
 import { OrganizationModule } from './modules/organizations/org.module';
 
@@ -16,8 +16,8 @@ import { OrganizationModule } from './modules/organizations/org.module';
     SuperadminModule,
     EventModule,
     OrganizationModule,
-    // SquadModule,
-    // AuthModule,
+    SquadsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
